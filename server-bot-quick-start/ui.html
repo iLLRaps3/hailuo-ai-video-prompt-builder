@@ -1,0 +1,129 @@
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Prompt Bot Chat UI
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;display=swap" rel="stylesheet"/>
+  <style>
+   body {
+      font-family: 'Inter', sans-serif;
+    }
+    /* Scrollbar for chat messages */
+    #messages {
+      scrollbar-width: thin;
+      scrollbar-color: #a0aec0 transparent;
+    }
+    #messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    #messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #messages::-webkit-scrollbar-thumb {
+      background-color: #a0aec0;
+      border-radius: 4px;
+    }
+  </style>
+ </head>
+ <body class="bg-gray-50 flex flex-col min-h-screen">
+  <header class="bg-white shadow-md">
+   <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+     <img alt="Prompt Bot logo, stylized letters PB in blue and white" class="w-10 h-10 rounded" height="40" src="https://storage.googleapis.com/a1aa/image/00564f7b-5a57-4e60-e493-1365644fc449.jpg" width="40"/>
+     <h1 class="text-xl font-semibold text-gray-800">
+      Prompt Bot
+     </h1>
+    </div>
+   </div>
+  </header>
+  <main class="flex-grow container mx-auto px-4 py-6 flex flex-col max-w-3xl">
+   <div aria-live="polite" aria-relevant="additions" class="flex-grow overflow-y-auto bg-white rounded-lg shadow p-6 space-y-4" id="messages">
+    <!-- Chat messages will appear here -->
+   </div>
+   <form aria-label="Send message to Prompt Bot" autocomplete="off" class="mt-4 flex items-center space-x-3" id="chat-form">
+    <input aria-required="true" class="flex-grow border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" id="user-input" name="user-input" placeholder="Type your message..." required="" type="text"/>
+    <button aria-label="Send message" class="bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500" type="submit">
+     <i class="fas fa-paper-plane">
+     </i>
+    </button>
+   </form>
+  </main>
+  <footer class="bg-white border-t border-gray-200 py-4 text-center text-gray-600 text-sm">
+   2024 Prompt Bot App. All rights reserved.
+  </footer>
+  <script>
+   const messagesContainer = document.getElementById('messages');
+    const chatForm = document.getElementById('chat-form');
+    const userInput = document.getElementById('user-input');
+
+    // Helper to create message bubble
+    function createMessageBubble(text, isUser = false) {
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+
+      const bubble = document.createElement('div');
+      bubble.className = `max-w-[75%] px-4 py-3 rounded-lg shadow ${
+        isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-200 text-gray-900 rounded-bl-none'
+      }`;
+
+      bubble.textContent = text;
+      wrapper.appendChild(bubble);
+      return wrapper;
+    }
+
+    // Send user message to prompt bot API and get response
+    async function getBotResponse(userMessage) {
+      try {
+        const response = await fetch('/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ query: userMessage }),
+        });
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+        const data = await response.json();
+        return data.response || 'No response from bot.';
+      } catch (error) {
+        return `Error: ${error.message}`;
+      }
+    }
+
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      // Append user message
+      const userMessage = createMessageBubble(message, true);
+      messagesContainer.appendChild(userMessage);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+      userInput.value = '';
+      userInput.focus();
+
+      // Get bot response
+      const botReply = await getBotResponse(message);
+      const botMessage = createMessageBubble(botReply, false);
+      messagesContainer.appendChild(botMessage);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    });
+
+    // Welcome message from bot on load
+    window.addEventListener('load', () => {
+      const welcomeMessage = createMessageBubble(
+        "Hi! Send me a message and I'll reply.",
+        false
+      );
+      messagesContainer.appendChild(welcomeMessage);
+    });
+  </script>
+ </body>
+</html>
